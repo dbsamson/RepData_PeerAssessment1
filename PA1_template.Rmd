@@ -1,18 +1,37 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "Assignment 1"
+author: "David Samson"
+date: "August 12, 2015"
+output: html_document
 ---
+
+This project analyzes data collected from a single individual at 5 minute intervals through out the day, during the months of October and November, 2012.  
+
+The basic steps which will be followed will be: 
+1. Load the raw data.
+2. Create a modified data set to handle missing values.  
+3. The following data analysis steps on the raw data:
+  + Histogram of the total number of steps per day
+  + Median and mean per day
+  
 
 
 ## Loading and preprocessing the data
-
-
-
+```{r}
+library(dplyr)
+raw<-read.csv("activity.csv")
+summary(raw) # For simple overview of loaded data.  
+```
+ 
 ## What is mean total number of steps taken per day?
+```{r}
+grouped<-group_by(raw,date)
+dailyTotals <- summarise(grouped,sumSteps=sum(steps),meanSteps=mean(steps,na.rm=T),medianSteps=median(steps,na.rm=T))
+```
 
-
+## Overview plot of the data
+breaks <-  as.Date.POSIXct(c("1-Oct-2012","15-Oct-2012","30-Oct-2012","14-Nov-2012","29-Nov-2012"))
+p<-ggplot(dailyTotals,aes(x=date, y=sumSteps)) + geom_histogram(stat="identity")+scale_x_continuous(breaks=breaks)
 
 ## What is the average daily activity pattern?
 
