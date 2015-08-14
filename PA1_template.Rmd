@@ -1,40 +1,46 @@
 ---
 title: "Assignment 1"
 author: "David Samson"
-date: "August 12, 2015"
+date: "August 14, 2015"
 output: html_document
 ---
 
 This project analyzes data collected from a single individual at 5 minute intervals through out the day, during the months of October and November, 2012.  
 
-The basic steps which will be followed will be: 
-1. Load the raw data.
-2. Create a modified data set to handle missing values.  
-3. The following data analysis steps on the raw data:
-  + Histogram of the total number of steps per day
-  + Median and mean per day
-4. Interval-based analysis
-  + Summary plot of total average steps per 5 minute interval
-  + State the interval with the highest number of steps
-5. Imputing missing values
-  + Explain and execute the approach
-  + Plot average steps per 5 minute interval, with imputed data
+The overall structure followed will be: 
+
+1. Load the raw data. 
+2. Create a modified data set to handle missing values.   
+3. The following data analysis steps on the raw data: 
+  + Histogram of the total number of steps per day 
+  + Median and mean per day 
+4. Interval-based analysis 
+  + Summary plot of total average steps per 5 minute interval 
+  + State the interval with the highest number of steps 
+5. Imputing missing values 
+  + Explain and execute the approach 
+  + Plot average steps per 5 minute interval, with imputed data 
   + Compare imputed to raw data
 6. Analyze differences between weekdays and weekends
   + Segregate the data
   + Plot both weekday and weekend data 
+  
+  
   
 
 ## Loading and preprocessing the data
 ```{r warning=FALSE, error=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
+library(lubridate)
 ```
 
 ```{r}
 setwd("C://NotDropboxed//Learning//Reproducible Research//Assignments and Quizzes//Assignment 1//RepData_PeerAssessment1")
 raw<-read.csv("activity.csv")
+raw$date <-ymd(as.character(raw$date))
 summary(raw) # For simple overview of loaded data.  
+unloadNamespace("lubridate") # causes conflicts, so we unload it temporarily 
 ```
  
 ## What is mean total number of steps taken per day?
@@ -122,3 +128,4 @@ weekendstotalsByInterval <- summarise(weekendsByInterval,steps=mean(steps,na.rm=
 plot(x=weekendsByInterval$interval,y=weekendsByInterval$steps,xlab="Interval Nbr",ylab="Steps",main="Weekends: Average Number of Steps per Interval",type="l")
 ```
 
+The conclusion of the above is that the subject walks less on weekends, and his/her day starts later.  
