@@ -17,8 +17,12 @@ The basic steps which will be followed will be:
 
 
 ## Loading and preprocessing the data
-```{r}
+```{r include=FALSE}
 library(dplyr)
+library(ggplot2)
+```
+
+```{r}
 raw<-read.csv("activity.csv")
 summary(raw) # For simple overview of loaded data.  
 ```
@@ -30,15 +34,78 @@ dailyTotals <- summarise(grouped,sumSteps=sum(steps),meanSteps=mean(steps,na.rm=
 ```
 
 ## Overview plot of the data
-breaks <-  as.Date.POSIXct(c("1-Oct-2012","15-Oct-2012","30-Oct-2012","14-Nov-2012","29-Nov-2012"))
-p<-ggplot(dailyTotals,aes(x=date, y=sumSteps)) + geom_histogram(stat="identity")+scale_x_continuous(breaks=breaks)
+```{r}
+p<-ggplot(dailyTotals,aes(x=date, y=sumSteps)) +             geom_histogram(stat="identity")+ 
+labs(title="Total Steps by Subject\nOct & Nov 2012",
+     x="Date", y="Number of Steps")
+p
+```
+
+The daily mean steps is `r round(mean(dailyTotals$sumSteps,na.rm=T),0)` and the daily median steps is `r round(median(dailyTotals$sumSteps,na.rm=T),0)`.
 
 ## What is the average daily activity pattern?
+```{r}
+groupedByInterval<-group_by(raw,interval)
+totalsByInterval <- summarise(groupedByInterval,steps=mean(steps,na.rm=T))
+plot(x=totalsByInterval$interval,y=totalsByInterval$steps,xlab="Interval Nbr",ylab="Steps",main="Average Number of Steps per Interval",type="l")
+```
 
+```{r echo=FALSE }
+totalsByInterval<- arrange(totalsByInterval,desc(steps))
+```
 
+The interval with the highest average number of steps, across all days, is interval `r totalsByInterval[1,"interval"] `.   
 
 ## Imputing missing values
+Of the `r dim(raw)[1]` samples, `r sum(is.na(raw$steps))` are missing("NA").  To complete the data, we will assign all of the missing values to the average for all days for that specific interval.  This will be referred to as "imputed data".  The code appears below: 
 
+```{r}
+imputed<-raw # copy the raw data, including the NAs
+for(i in 1:nrow(imputed)) {
+  if (is.na(imputed[i,1]))  {
+    # Calculate where in the row number in the averages table which contains the     # relevant average for the interval
+    rownum <- (trunc(imputed[i,3]/100)*12+(imputed[i,3]%%100)/5)+1
+    imputed[i,1]<- totalsByInterval[rownum,2]
+  }
+}  
+```
+
+Re-running the analysis of the daily totals (as above, but now with the imputed results for the missing data.)
+
+```{r}
+groupedImputed<-group_by(imputed,date)
+dailyTotalsImputed <-summarise(groupedImputed,sumSteps=sum(steps),
+                    meanSteps=mean(steps,na.rm=T),
+                    medianSteps=median(steps,na.rm=T))
+
+p<-ggplot(dailyTotalsImputed,aes(x=date, y=sumSteps)) +             geom_histogram(stat="identity")+ 
+labs(title="Total Steps by Subject with Imputed Data\nOct & Nov 2012",
+     x="Date", y="Number of Steps")
+p
+```
+
+The daily mean steps using **imputed data** is `r round(mean(dailyTotalsImputed$sumSteps,na.rm=T),0)` and the daily median steps is `r round(median(dailyTotalsImputed$sumSteps,na.rm=T),0)`.   These values are **TBD Fill in conclusion here **
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+``` {r include=FALSE} 
+library(lubridate)
+```
+
+``` {r }
+raw$weekend<- (weekdays(ymd(as.character(raw$date))) %in% c("Saturday","Sunday"))
+weekdaysData <- raw[!raw$weekend,]
+weekendsData <- raw[raw$weekend,]
+par(mfrow = c(2, 1))
+
+# Weekdays first 
+weekdaysByInterval<-group_by(weekdaysData,interval)
+weekdaystotalsByInterval <- summarise(weekdaysByInterval,steps=mean(steps,na.rm=T))
+plot(x=weekdaysByInterval$interval,y=weekdaysByInterval$steps,xlab="Interval Nbr",ylab="Steps",main="Weekdays: Average Number of Steps per Interval",type="l")
+
+# Weekends  
+weekendsByInterval<-group_by(weekendsData,interval)
+weekendstotalsByInterval <- summarise(weekendsByInterval,steps=mean(steps,na.rm=T))
+plot(x=weekendsByInterval$interval,y=weekendsByInterval$steps,xlab="Interval Nbr",ylab="Steps",main="Weekends: Average Number of Steps per Interval",type="l")
+```
+
